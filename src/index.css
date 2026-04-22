@@ -1,0 +1,33 @@
+@import "tailwindcss";
+
+@layer base {
+  body {
+    @apply bg-[#fcfcfc] text-[#1a1a1a] antialiased;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+}
+
+@theme {
+  --color-milo-blue: #2563eb;
+  --color-milo-red: #ff6b6b;
+  --color-milo-yellow: #ffd43b;
+  --color-milo-green: #51cf66;
+  --shadow-milo: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+}
+
+.wave-bar {
+  @apply w-12 rounded-full shadow-lg;
+  transition: height 0.3s ease;
+}
+
+/* Custom shadow for the search input */
+.milo-input-shadow {
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+/* Glassmorphism effect */
+.glass {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
