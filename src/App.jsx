@@ -213,14 +213,39 @@ const HistoryScreen = ({ isOpen, onClose, history = [] }) => {
   );
 };
 
-const ChatDialogue = ({ messages, isLoading }) => {
+const TypingText = ({ text, onComplete, speed = 40 }) => {
+  const [displayedText, setDisplayedText] = useState('');
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  useEffect(() => {
+    if (currentIndex < text.length) {
+      const timeout = setTimeout(() => {
+        setDisplayedText(prev => prev + text[currentIndex]);
+        setCurrentIndex(prev => prev + 1);
+      }, speed);
+      return () => clearTimeout(timeout);
+    } else if (onComplete) {
+      onComplete();
+    }
+  }, [currentIndex, text, speed, onComplete]);
+
+  return (
+    <div className="flex flex-col gap-1">
+      {displayedText.split('\n').map((line, i) => (
+        <p key={i}>{line}</p>
+      ))}
+    </div>
+  );
+};
+
+const ChatDialogue = ({ messages, isLoading, isThinking }) => {
   const scrollRef = useRef(null);
 
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [messages]);
+  }, [messages, isLoading, isThinking]);
 
   return (
     <motion.div 
@@ -237,19 +262,44 @@ const ChatDialogue = ({ messages, isLoading }) => {
               ? "bg-white shadow-milo text-[#1a1a1a] font-medium border border-gray-50" 
               : "text-[#333] leading-relaxed"
           )}>
-            {msg.content.split('\n').map((line, i) => (
-              <p key={i}>{line}</p>
-            ))}
+            {msg.role === 'assistant' && index === messages.length - 1 && msg.isNew ? (
+              <TypingText text={msg.content} speed={50} />
+            ) : (
+              msg.content.split('\n').map((line, i) => (
+                <p key={i}>{line}</p>
+              ))
+            )}
           </div>
         </div>
       ))}
       
-      {isLoading && (
+      {(isLoading || isThinking) && (
         <div className="flex items-start gap-1">
           <div className="flex gap-1 px-4 py-3 bg-gray-100 rounded-full">
-            <motion.div animate={{ opacity: [0.4, 1, 0.4] }} transition={{ repeat: Infinity, duration: 1 }} className="w-2 h-2 bg-gray-400 rounded-full" />
-            <motion.div animate={{ opacity: [0.4, 1, 0.4] }} transition={{ repeat: Infinity, duration: 1, delay: 0.2 }} className="w-2 h-2 bg-gray-400 rounded-full" />
-            <motion.div animate={{ opacity: [0.4, 1, 0.4] }} transition={{ repeat: Infinity, duration: 1, delay: 0.4 }} className="w-2 h-2 bg-gray-400 rounded-full" />
+            <motion.div 
+              animate={{ 
+                scale: [1, 1.2, 1],
+                opacity: [0.4, 1, 0.4] 
+              }} 
+              transition={{ repeat: Infinity, duration: 0.8 }} 
+              className="w-2 h-2 bg-[#2E5BFF] rounded-full" 
+            />
+            <motion.div 
+              animate={{ 
+                scale: [1, 1.2, 1],
+                opacity: [0.4, 1, 0.4] 
+              }} 
+              transition={{ repeat: Infinity, duration: 0.8, delay: 0.2 }} 
+              className="w-2 h-2 bg-[#2E5BFF] rounded-full" 
+            />
+            <motion.div 
+              animate={{ 
+                scale: [1, 1.2, 1],
+                opacity: [0.4, 1, 0.4] 
+              }} 
+              transition={{ repeat: Infinity, duration: 0.8, delay: 0.4 }} 
+              className="w-2 h-2 bg-[#2E5BFF] rounded-full" 
+            />
           </div>
         </div>
       )}
@@ -270,6 +320,20 @@ export default function App() {
   
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
+  const isCancellingRef = useRef(false);
+  const audioRef = useRef(new Audio());
+
+  // Функция для "разблокировки" аудио (priming) при взаимодействии пользователя
+  const primeAudio = () => {
+    if (audioRef.current) {
+      audioRef.current.play().then(() => {
+        audioRef.current.pause();
+        console.log("Audio primed successfully");
+      }).catch(err => {
+        console.log("Audio priming failed (expected if no interaction yet):", err);
+      });
+    }
+  };
 
   const history = [
     { title: "Первый разговор в аэропорту", date: "18.04.2026 03:57" }
@@ -278,6 +342,9 @@ export default function App() {
   const handleStartChat = async () => {
     console.log("handleStartChat triggered");
     
+    // Пытаемся "разблокировать" аудио при первом же клике "Начать"
+    primeAudio();
+
     // Проверяем поддержку getUserMedia
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
       alert("Ваш браузер не поддерживает запись аудио. Попробуйте обновить браузер или использовать Chrome/Safari.");
@@ -313,46 +380,51 @@ export default function App() {
     const message = text || inputText;
     if (!message.trim() || isLoading) return;
 
+    // Пытаемся разблокировать аудио при отправке текста
+    primeAudio();
+
     const newUserMessage = { role: 'user', content: message };
     const updatedMessages = [...messages, newUserMessage];
     
-    setMessages(updatedMessages);
+    setMessages(prev => [...prev, newUserMessage]);
     setInputText('');
     setIsLoading(true);
 
     try {
       const gptResponse = await sendMessageToGPT(updatedMessages);
-      setMessages([...updatedMessages, gptResponse]);
+      setMessages(prev => [...prev, gptResponse]);
       setIsLoading(false);
 
-      // ВСЕГДА озвучиваем ответ ИИ
-      console.log("Generating speech for response:", gptResponse.content);
+      // Генерируем голос
       const audioUrl = await generateSpeech(gptResponse.content);
       
-      if (audioUrl) {
-        console.log("Audio URL received, playing...");
-        const audio = new Audio();
-        audio.src = audioUrl;
-        audio.crossOrigin = "anonymous";
+      if (audioUrl && audioRef.current) {
+        console.log("Playing audio from:", audioUrl);
         
-        const playAudio = async () => {
-          try {
-            await audio.play();
-            console.log("Audio playing successfully");
-          } catch (e) {
-            console.error("Audio playback failed:", e);
-            // Если автоплей заблокирован, пробуем воспроизвести при следующем клике
-            const playOnClick = () => {
-              audio.play();
-              window.removeEventListener('click', playOnClick);
+        // Прекращаем текущее воспроизведение, если оно есть
+        audioRef.current.pause();
+        audioRef.current.src = audioUrl;
+        audioRef.current.crossOrigin = "anonymous";
+        
+        // Пытаемся воспроизвести. Так как объект уже "разблокирован" (primed), 
+        // это должно сработать сразу даже после сетевого запроса.
+        const playPromise = audioRef.current.play();
+        
+        if (playPromise !== undefined) {
+          playPromise.catch(error => {
+            console.log("Auto-play blocked after fetch, retrying logic...", error);
+            // Если все же заблокировано, вешаем на следующее взаимодействие
+            const unlockAudio = () => {
+              audioRef.current.play();
+              window.removeEventListener('click', unlockAudio);
+              window.removeEventListener('touchstart', unlockAudio);
+              window.removeEventListener('pointerdown', unlockAudio);
             };
-            window.addEventListener('click', playOnClick);
-          }
-        };
-        
-        playAudio();
-      } else {
-        console.error("Failed to get audio URL from generateSpeech");
+            window.addEventListener('click', unlockAudio);
+            window.addEventListener('touchstart', unlockAudio);
+            window.addEventListener('pointerdown', unlockAudio);
+          });
+        }
       }
     } catch (error) {
       console.error("Error in message flow:", error);
@@ -372,6 +444,10 @@ export default function App() {
   };
 
   const handleRecordStart = async () => {
+    // Важно: вызываем primeAudio сразу при нажатии, 
+    // чтобы "закрепить" за этим объектом разрешение на воспроизведение
+    primeAudio();
+
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const mediaRecorder = new MediaRecorder(stream);
@@ -385,6 +461,13 @@ export default function App() {
       };
 
       mediaRecorder.onstop = async () => {
+        // Если запись была отменена крестиком - ничего не отправляем
+        if (isCancellingRef.current) {
+          isCancellingRef.current = false;
+          stream.getTracks().forEach(track => track.stop());
+          return;
+        }
+
         const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
         const text = await transcribeAudio(audioBlob);
         if (text) {
@@ -405,6 +488,7 @@ export default function App() {
     if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
       mediaRecorderRef.current.stop();
       setIsRecording(false);
+      // Гарантируем, что панель остается открытой для приема звука
       setIsWaveVisible(true);
     }
   };
@@ -532,7 +616,16 @@ export default function App() {
           
           <button 
             onClick={() => {
+              // Разблокируем аудио при любом клике на кнопки управления
+              primeAudio();
+              
               if (isWaveVisible || isRecording) {
+                if (isRecording) {
+                  isCancellingRef.current = true;
+                  if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+                    mediaRecorderRef.current.stop();
+                  }
+                }
                 setIsWaveVisible(false);
                 setIsRecording(false);
               } else {
