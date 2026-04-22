@@ -9,7 +9,9 @@ function cn(...inputs) {
   return twMerge(clsx(inputs));
 }
 
-const WaveBars = ({ isVisible, compact = false }) => {
+const WaveBars = ({ isVisible, isAnimating = true, compact = false }) => {
+  const staticHeight = compact ? 20 : 80;
+  
   return (
     <AnimatePresence>
       {isVisible && (
@@ -20,28 +22,28 @@ const WaveBars = ({ isVisible, compact = false }) => {
           className={cn("flex items-center justify-center gap-[6px]", compact ? "h-12 gap-[3px]" : "h-40")}
         >
           <motion.div 
-            animate={{ height: compact ? [15, 25, 15] : [60, 100, 60] }}
-            transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+            animate={{ height: isAnimating ? (compact ? [15, 25, 15] : [60, 100, 60]) : staticHeight }}
+            transition={{ duration: 1.5, repeat: isAnimating ? Infinity : 0, ease: "easeInOut" }}
             className={cn("rounded-full bg-[#FF6B6B] shadow-lg", compact ? "w-[3px]" : "w-[50px]")} 
           />
           <motion.div 
-            animate={{ height: compact ? [20, 30, 20] : [80, 120, 80] }}
-            transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut", delay: 0.2 }}
+            animate={{ height: isAnimating ? (compact ? [20, 30, 20] : [80, 120, 80]) : staticHeight }}
+            transition={{ duration: 1.5, repeat: isAnimating ? Infinity : 0, ease: "easeInOut", delay: 0.2 }}
             className={cn("rounded-full bg-[#2E5BFF] shadow-lg", compact ? "w-[3px]" : "w-[50px]")} 
           />
           <motion.div 
-            animate={{ height: compact ? [25, 40, 25] : [100, 150, 100] }}
-            transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut", delay: 0.4 }}
+            animate={{ height: isAnimating ? (compact ? [25, 40, 25] : [100, 150, 100]) : staticHeight }}
+            transition={{ duration: 1.5, repeat: isAnimating ? Infinity : 0, ease: "easeInOut", delay: 0.4 }}
             className={cn("rounded-full bg-[#FFCC00] shadow-lg", compact ? "w-[3px]" : "w-[50px]")} 
           />
           <motion.div 
-            animate={{ height: compact ? [20, 30, 20] : [80, 120, 80] }}
-            transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut", delay: 0.6 }}
+            animate={{ height: isAnimating ? (compact ? [20, 30, 20] : [80, 120, 80]) : staticHeight }}
+            transition={{ duration: 1.5, repeat: isAnimating ? Infinity : 0, ease: "easeInOut", delay: 0.6 }}
             className={cn("rounded-full bg-[#2E5BFF] shadow-lg", compact ? "w-[3px]" : "w-[50px]")} 
           />
           <motion.div 
-            animate={{ height: compact ? [15, 25, 15] : [60, 100, 60] }}
-            transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut", delay: 0.8 }}
+            animate={{ height: isAnimating ? (compact ? [15, 25, 15] : [60, 100, 60]) : staticHeight }}
+            transition={{ duration: 1.5, repeat: isAnimating ? Infinity : 0, ease: "easeInOut", delay: 0.8 }}
             className={cn("rounded-full bg-[#4CD964] shadow-lg", compact ? "w-[3px]" : "w-[50px]")} 
           />
         </motion.div>
@@ -263,7 +265,7 @@ const ChatDialogue = ({ messages, isLoading, isThinking }) => {
               : "text-[#333] leading-relaxed"
           )}>
             {msg.role === 'assistant' && index === messages.length - 1 && msg.isNew ? (
-              <TypingText text={msg.content} speed={50} />
+              <TypingText text={msg.content} speed={msg.typingSpeed || 50} />
             ) : (
               msg.content.split('\n').map((line, i) => (
                 <p key={i}>{line}</p>
@@ -274,34 +276,45 @@ const ChatDialogue = ({ messages, isLoading, isThinking }) => {
       ))}
       
       {(isLoading || isThinking) && (
-        <div className="flex items-start gap-1">
-          <div className="flex gap-1 px-4 py-3 bg-gray-100 rounded-full">
+        <motion.div 
+          initial={{ opacity: 0, x: -10 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="flex items-start gap-3"
+        >
+          <div className="flex gap-1.5 px-5 py-3.5 bg-gray-100 rounded-[24px] rounded-tl-none shadow-sm">
             <motion.div 
               animate={{ 
-                scale: [1, 1.2, 1],
+                scale: [1, 1.4, 1],
                 opacity: [0.4, 1, 0.4] 
               }} 
-              transition={{ repeat: Infinity, duration: 0.8 }} 
+              transition={{ repeat: Infinity, duration: 1, ease: "easeInOut" }} 
               className="w-2 h-2 bg-[#2E5BFF] rounded-full" 
             />
             <motion.div 
               animate={{ 
-                scale: [1, 1.2, 1],
+                scale: [1, 1.4, 1],
                 opacity: [0.4, 1, 0.4] 
               }} 
-              transition={{ repeat: Infinity, duration: 0.8, delay: 0.2 }} 
+              transition={{ repeat: Infinity, duration: 1, ease: "easeInOut", delay: 0.2 }} 
               className="w-2 h-2 bg-[#2E5BFF] rounded-full" 
             />
             <motion.div 
               animate={{ 
-                scale: [1, 1.2, 1],
+                scale: [1, 1.4, 1],
                 opacity: [0.4, 1, 0.4] 
               }} 
-              transition={{ repeat: Infinity, duration: 0.8, delay: 0.4 }} 
+              transition={{ repeat: Infinity, duration: 1, ease: "easeInOut", delay: 0.4 }} 
               className="w-2 h-2 bg-[#2E5BFF] rounded-full" 
             />
           </div>
-        </div>
+          <motion.span 
+            animate={{ opacity: [0.4, 1, 0.4] }}
+            transition={{ duration: 2, repeat: Infinity }}
+            className="text-sm font-medium text-gray-400 self-center"
+          >
+            {isThinking ? "Milo думает..." : "Milo говорит..."}
+          </motion.span>
+        </motion.div>
       )}
     </motion.div>
   );
@@ -317,11 +330,76 @@ export default function App() {
     { role: 'assistant', content: 'Привет, Азат! Я Milo AI, помогу тебе выучить английский для путешествий.\nНачнём с аэропорта — базовые фразы для первых ситуаций за границей.\nСкажи, как по-русски ты спросишь, где аэропорт?' }
   ]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isThinking, setIsThinking] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
   
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
   const isCancellingRef = useRef(false);
   const audioRef = useRef(new Audio());
+
+  // Эффект для отслеживания окончания проигрывания
+  useEffect(() => {
+    const audio = audioRef.current;
+    const handlePlay = () => setIsPlaying(true);
+    const handleEnd = () => setIsPlaying(false);
+    const handleError = () => setIsPlaying(false);
+
+    audio.addEventListener('play', handlePlay);
+    audio.addEventListener('ended', handleEnd);
+    audio.addEventListener('pause', handleEnd);
+    audio.addEventListener('error', handleError);
+
+    return () => {
+      audio.removeEventListener('play', handlePlay);
+      audio.removeEventListener('ended', handleEnd);
+      audio.removeEventListener('pause', handleEnd);
+      audio.removeEventListener('error', handleError);
+    };
+  }, []);
+
+  const playWelcomeSpeech = async () => {
+    try {
+      const welcomeContent = messages[0].content;
+      const audioUrl = await generateSpeech(welcomeContent);
+      
+      if (audioUrl && audioRef.current) {
+        audioRef.current.src = audioUrl;
+        audioRef.current.crossOrigin = "anonymous";
+        
+        // Ждем загрузки метаданных для определения длительности
+        await new Promise((resolve) => {
+          const onLoaded = () => {
+            audioRef.current.removeEventListener('loadedmetadata', onLoaded);
+            resolve();
+          };
+          audioRef.current.addEventListener('loadedmetadata', onLoaded);
+          setTimeout(resolve, 2000);
+        });
+
+        const duration = audioRef.current.duration || 5;
+        const typingSpeed = (duration * 1000) / welcomeContent.length;
+
+        // Обновляем первое сообщение, добавляя флаг анимации и скорость
+        setMessages(prev => {
+          const newMsgs = [...prev];
+          newMsgs[0] = { ...newMsgs[0], isNew: true, typingSpeed };
+          return newMsgs;
+        });
+
+        audioRef.current.play().catch(e => console.log("Welcome play blocked", e));
+      }
+    } catch (e) {
+      console.error("Failed to play welcome message", e);
+    }
+  };
+
+  // Озвучка самого первого сообщения при старте
+  useEffect(() => {
+    if (isStarted && !isHistoryOpen && messages.length === 1) {
+      playWelcomeSpeech();
+    }
+  }, [isStarted, isHistoryOpen]);
 
   // Функция для "разблокировки" аудио (priming) при взаимодействии пользователя
   const primeAudio = () => {
@@ -376,59 +454,87 @@ export default function App() {
     }
   };
 
-  const handleSendMessage = async (text) => {
+  const handleSendMessage = async (text, isVoiceResponse = false) => {
     const message = text || inputText;
-    if (!message.trim() || isLoading) return;
+    if (!message.trim() || isLoading || isThinking) return;
 
-    // Пытаемся разблокировать аудио при отправке текста
-    primeAudio();
+    // Пытаемся разблокировать аудио только если ожидаем голосовой ответ
+    if (isVoiceResponse) {
+      primeAudio();
+    }
 
     const newUserMessage = { role: 'user', content: message };
     const updatedMessages = [...messages, newUserMessage];
     
     setMessages(prev => [...prev, newUserMessage]);
     setInputText('');
-    setIsLoading(true);
+    setIsThinking(true);
 
     try {
-      const gptResponse = await sendMessageToGPT(updatedMessages);
-      setMessages(prev => [...prev, gptResponse]);
-      setIsLoading(false);
+      // Добавляем пометку о режиме для ИИ (в скрытом виде или как часть последнего сообщения)
+      const messagesForGPT = updatedMessages.map((msg, idx) => {
+        if (idx === updatedMessages.length - 1 && !isVoiceResponse) {
+          return { ...msg, content: `[TEXT MODE] ${msg.content}` };
+        }
+        return msg;
+      });
 
-      // Генерируем голос
-      const audioUrl = await generateSpeech(gptResponse.content);
+      const gptResponse = await sendMessageToGPT(messagesForGPT);
       
-      if (audioUrl && audioRef.current) {
-        console.log("Playing audio from:", audioUrl);
-        
-        // Прекращаем текущее воспроизведение, если оно есть
-        audioRef.current.pause();
+      let audioUrl = null;
+      if (isVoiceResponse) {
+        // Генерируем голос только для голосового режима
+        audioUrl = await generateSpeech(gptResponse.content);
+      }
+      
+      setIsThinking(false);
+      setIsLoading(true);
+
+      if (isVoiceResponse && audioUrl && audioRef.current) {
         audioRef.current.src = audioUrl;
         audioRef.current.crossOrigin = "anonymous";
         
-        // Пытаемся воспроизвести. Так как объект уже "разблокирован" (primed), 
-        // это должно сработать сразу даже после сетевого запроса.
+        // Ждем загрузки метаданных, чтобы узнать длительность
+        await new Promise((resolve) => {
+          const onLoaded = () => {
+            audioRef.current.removeEventListener('loadedmetadata', onLoaded);
+            resolve();
+          };
+          audioRef.current.addEventListener('loadedmetadata', onLoaded);
+          // Таймаут на случай если не загрузится
+          setTimeout(resolve, 2000);
+        });
+
+        const duration = audioRef.current.duration || 3;
+        const typingSpeed = (duration * 1000) / gptResponse.content.length;
+
+        // Воспроизводим звук
         const playPromise = audioRef.current.play();
-        
         if (playPromise !== undefined) {
           playPromise.catch(error => {
-            console.log("Auto-play blocked after fetch, retrying logic...", error);
-            // Если все же заблокировано, вешаем на следующее взаимодействие
+            console.log("Auto-play blocked, retrying logic...", error);
             const unlockAudio = () => {
               audioRef.current.play();
               window.removeEventListener('click', unlockAudio);
               window.removeEventListener('touchstart', unlockAudio);
-              window.removeEventListener('pointerdown', unlockAudio);
             };
             window.addEventListener('click', unlockAudio);
             window.addEventListener('touchstart', unlockAudio);
-            window.addEventListener('pointerdown', unlockAudio);
           });
         }
+
+        // Добавляем сообщение с рассчитанной скоростью печати
+        setMessages(prev => [...prev, { ...gptResponse, isNew: true, typingSpeed }]);
+        setIsLoading(false);
+      } else {
+        // Если это текстовый чат или аудио не удалось получить, просто выводим текст со стандартной скоростью
+        setMessages(prev => [...prev, { ...gptResponse, isNew: true, typingSpeed: 30 }]);
+        setIsLoading(false);
       }
     } catch (error) {
       console.error("Error in message flow:", error);
       setIsLoading(false);
+      setIsThinking(false);
     }
   };
 
@@ -471,7 +577,7 @@ export default function App() {
         const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
         const text = await transcribeAudio(audioBlob);
         if (text) {
-          handleSendMessage(text);
+          handleSendMessage(text, true);
         }
         stream.getTracks().forEach(track => track.stop());
       };
@@ -498,7 +604,10 @@ export default function App() {
       <div className={cn("fixed inset-0 z-0", isHistoryOpen ? "pointer-events-auto" : "pointer-events-none")}>
         <HistoryScreen 
           isOpen={isHistoryOpen} 
-          onClose={() => setIsHistoryOpen(false)}
+          onClose={() => {
+            setIsHistoryOpen(false);
+            playWelcomeSpeech();
+          }}
           history={history}
         />
       </div>
@@ -535,10 +644,10 @@ export default function App() {
                   Первый разговор в аэропорту
                 </h1>
                 
-                <WaveBars isVisible={true} />
+                <WaveBars isVisible={true} isAnimating={isPlaying} />
                 
                 <button 
-                  onClick={() => setIsStarted(true)}
+                  onClick={handleStartChat}
                   className="bg-[#2E5BFF] text-white px-10 py-4 rounded-full text-lg font-semibold shadow-lg shadow-[#2E5BFF44] active:scale-95 transition-transform"
                 >
                   Начать
@@ -551,7 +660,7 @@ export default function App() {
                 animate={{ opacity: 1 }}
                 className="w-full h-full flex flex-col overflow-hidden"
               >
-                <ChatDialogue messages={messages} isLoading={isLoading} />
+                <ChatDialogue messages={messages} isLoading={isLoading} isThinking={isThinking} />
                 
                 {/* FIXED WAVE PANEL - Out of scroll flow */}
                 <div className="fixed bottom-24 left-0 right-0 z-20 pointer-events-none flex flex-col items-center max-w-md mx-auto h-64 justify-center">
@@ -572,7 +681,7 @@ export default function App() {
                       className="pointer-events-auto cursor-pointer relative flex items-center justify-center w-full z-10 touch-none"
                     >
                       <div className="absolute">
-                        <WaveBars isVisible={isWaveVisible} />
+                        <WaveBars isVisible={isWaveVisible} isAnimating={isPlaying} />
                       </div>
                       <div className="absolute">
                         <RecordingCircle isRecording={isRecording} />
@@ -650,7 +759,10 @@ export default function App() {
         {isHistoryOpen && (
           <div 
             className="absolute inset-0 z-[60] cursor-pointer bg-black/5" 
-            onClick={() => setIsHistoryOpen(false)}
+            onClick={() => {
+              setIsHistoryOpen(false);
+              playWelcomeSpeech();
+            }}
           />
         )}
       </motion.div>
