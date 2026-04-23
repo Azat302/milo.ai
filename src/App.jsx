@@ -242,9 +242,16 @@ const TypingText = ({ text, onComplete, speed = 40 }) => {
 
 const ChatDialogue = ({ messages, isLoading, isThinking }) => {
   const scrollRef = useRef(null);
+  const messageRefs = useRef([]);
 
   useEffect(() => {
-    if (scrollRef.current) {
+    if (scrollRef.current && messages.length >= 2) {
+      const targetIndex = messages.length - 2;
+      const targetElement = messageRefs.current[targetIndex];
+      if (targetElement) {
+        targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    } else if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages, isLoading, isThinking]);
@@ -254,10 +261,21 @@ const ChatDialogue = ({ messages, isLoading, isThinking }) => {
       ref={scrollRef}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="flex flex-col gap-6 px-6 pt-4 pb-64 overflow-y-auto w-full h-full scroll-smooth"
+      className="flex flex-col gap-6 px-6 pt-4 pb-[80vh] overflow-y-auto w-full h-full scroll-smooth relative"
+      style={{
+        maskImage: 'linear-gradient(to bottom, transparent 0%, black 150px, black 100%)',
+        WebkitMaskImage: 'linear-gradient(to bottom, transparent 0%, black 150px, black 100%)'
+      }}
     >
       {messages.map((msg, index) => (
-        <div key={index} className={cn("flex flex-col gap-1", msg.role === 'user' ? "items-end" : "items-start")}>
+        <div 
+          key={index} 
+          ref={el => messageRefs.current[index] = el}
+          className={cn("flex flex-col gap-1 transition-opacity duration-500", 
+            index < messages.length - 2 ? "opacity-30" : "opacity-100",
+            msg.role === 'user' ? "items-end" : "items-start"
+          )}
+        >
           <div className={cn(
             "px-5 py-3 rounded-[24px] text-lg max-w-[85%]",
             msg.role === 'user' 
