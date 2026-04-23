@@ -1,0 +1,20 @@
+{
+  "name": "milo - твой учитель английского",
+  "short_name": "milo",
+  "icons": [
+    {
+      "src": "/icons/icon-180.png?v=2",
+      "sizes": "180x180",
+      "type": "image/png"
+    },
+    {
+      "src": "/apple-touch-icon.png?v=2",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ],
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FCFCFC",
+  "theme_color": "#2E5BFF"
+}
