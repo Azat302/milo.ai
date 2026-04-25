@@ -3,12 +3,12 @@
   "short_name": "milo",
   "icons": [
     {
-      "src": "/icons/icon-180.png?v=3",
+      "src": "/icons/icon-180.png?v=4",
       "sizes": "180x180",
       "type": "image/png"
     },
     {
-      "src": "/apple-touch-icon.png?v=3",
+      "src": "/apple-touch-icon.png?v=4",
       "sizes": "180x180",
       "type": "image/png"
     }
