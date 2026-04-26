@@ -270,30 +270,10 @@ const AuthScreen = ({ onLogin }) => {
 
 const HistoryScreen = ({ isOpen, onClose, history = [], onOpenModal }) => {
   return (
-    <motion.div 
-      initial={{ x: "-100%" }}
-      animate={{ x: isOpen ? "0%" : "-100%" }}
-      transition={{ type: "tween", ease: "easeInOut", duration: 0.3 }}
-      drag="x"
-      dragDirectionLock
-      dragConstraints={{ left: -1000, right: 0 }}
-      dragElastic={0.05}
-      onDragEnd={(event, info) => {
-        if (info.offset.x < -50) {
-          onClose();
-        }
-      }}
-      className="fixed inset-0 bg-white z-[150] flex flex-col w-full h-full overflow-hidden shadow-2xl touch-none"
-    >
+    <div className="fixed inset-0 bg-white z-0 flex flex-col w-full h-full overflow-hidden">
       {/* Top Header */}
       <div className="flex items-center justify-between px-8 pt-12 pb-8">
         <h1 className="text-3xl font-bold tracking-tight text-[#1a1a1a]">milo</h1>
-        <button 
-          onClick={onClose}
-          className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 active:scale-90 transition-transform"
-        >
-          <X size={20} />
-        </button>
       </div>
 
       {/* Menu List */}
@@ -369,7 +349,7 @@ const HistoryScreen = ({ isOpen, onClose, history = [], onOpenModal }) => {
           <span className="text-[17px] font-bold">Начать</span>
         </button>
       </div>
-    </motion.div>
+    </div>
   );
 };
 
@@ -733,7 +713,7 @@ export default function App() {
     if (info.offset.x > 50 && !isHistoryOpen) {
       setIsHistoryOpen(true);
     }
-    // Свайп справа налево (закрытие) - работает когда история открыта
+    // Свайп справа налево (закрытие)
     if (info.offset.x < -50 && isHistoryOpen) {
       setIsHistoryOpen(false);
     }
@@ -808,7 +788,7 @@ export default function App() {
         )}
 
         {currentScreen === 'main' && (
-          <div className="w-full h-full flex flex-col items-center bg-white relative">
+          <div className="w-full h-full flex flex-col items-center bg-white relative overflow-hidden">
             <HistoryScreen 
               isOpen={isHistoryOpen} 
               onClose={() => {
@@ -835,12 +815,20 @@ export default function App() {
             />
 
             <motion.div 
-              onPanEnd={(event, info) => {
-                if (info.offset.x > 50 && !isHistoryOpen) {
-                  setIsHistoryOpen(true);
-                }
+              drag="x"
+              dragDirectionLock
+              dragConstraints={{ left: 0, right: 1000 }}
+              dragElastic={0.05}
+              onDragEnd={onDragEnd}
+              animate={{ 
+                x: isHistoryOpen ? "85%" : "0%",
               }}
-              className="h-full w-full bg-white flex flex-col items-center relative z-10 overflow-hidden"
+              transition={{ 
+                type: "tween", 
+                ease: "easeInOut", 
+                duration: 0.3 
+              }}
+              className="h-full w-full bg-white flex flex-col items-center relative z-10 overflow-hidden shadow-2xl touch-none"
             >
               <Header onOpenHistory={handleOpenHistory} />
               
@@ -969,10 +957,10 @@ export default function App() {
                 </button>
               </div>
 
-              {/* Overlay to close history */}
+              {/* Overlay to close history when clicking on main screen area */}
               {isHistoryOpen && (
                 <div 
-                  className="absolute inset-0 z-[60] cursor-pointer bg-black/5" 
+                  className="absolute inset-0 z-[60] cursor-pointer" 
                   onClick={() => {
                     setIsHistoryOpen(false);
                   }}
