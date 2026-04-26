@@ -174,15 +174,10 @@ const OnboardingScreen = ({ onNext }) => (
     exit={{ opacity: 0 }}
     className="fixed inset-0 bg-[#FCFCFC] z-[200] flex flex-col items-center p-8 overflow-y-auto"
   >
-    <div className="max-w-md w-full flex flex-col items-center pt-12">
-      <div className="w-full aspect-[4/3] bg-gray-50 rounded-[40px] mb-12 relative overflow-hidden border border-gray-100 shadow-sm flex items-center justify-center">
-        <div className="relative z-10 flex flex-col items-center">
-          <div className="w-24 h-24 bg-white rounded-[32px] mb-6 shadow-milo flex items-center justify-center border border-gray-50">
-            <img src="/milologo.png" alt="Milo" className="w-14 h-14" />
-          </div>
-          <div className="bg-white px-4 py-2 rounded-full border border-gray-100 text-sm font-bold text-[#2E5BFF] shadow-sm">
-            web.milo.ai
-          </div>
+    <div className="max-w-md w-full flex flex-col items-center pt-16">
+      <div className="mb-16">
+        <div className="w-24 h-24 bg-white rounded-[32px] shadow-milo flex items-center justify-center border border-gray-50">
+          <img src="/milologo.png" alt="Milo" className="w-14 h-14" />
         </div>
       </div>
 
@@ -228,51 +223,46 @@ const AuthScreen = ({ onLogin }) => {
 
   return (
     <motion.div 
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-      className="fixed inset-0 bg-white z-[200] flex flex-col p-8 pt-20"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 bg-white z-[200] flex flex-col items-center justify-center p-8"
     >
-      <div className="max-w-md w-full mx-auto flex flex-col h-full">
-        <div className="mb-12">
-          <h1 className="text-4xl font-extrabold text-[#1a1a1a] mb-4">Вход</h1>
-          <p className="text-gray-500 text-lg">Введите свои данные, чтобы продолжить обучение</p>
+      <div className="max-w-[320px] w-full flex flex-col">
+        <div className="flex flex-col items-center mb-10">
+          <div className="w-16 h-16 bg-white rounded-3xl mb-6 shadow-milo flex items-center justify-center border border-gray-50">
+            <img src="/milologo.png" alt="Milo" className="w-10 h-10" />
+          </div>
+          <h1 className="text-2xl font-bold text-[#1a1a1a]">Вход</h1>
         </div>
 
-        <div className="space-y-4 mb-8">
-          <div className="space-y-2">
-            <label className="text-sm font-bold text-gray-400 uppercase tracking-wider ml-1">Почта</label>
-            <input 
-              type="email" 
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="example@mail.com"
-              className="w-full bg-gray-50 border-2 border-transparent focus:border-[#2E5BFF] focus:bg-white rounded-[24px] px-6 py-4 text-lg outline-none transition-all"
-            />
-          </div>
-          <div className="space-y-2">
-            <label className="text-sm font-bold text-gray-400 uppercase tracking-wider ml-1">Пароль</label>
-            <input 
-              type="password" 
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
-              className="w-full bg-gray-50 border-2 border-transparent focus:border-[#2E5BFF] focus:bg-white rounded-[24px] px-6 py-4 text-lg outline-none transition-all"
-            />
-          </div>
+        <div className="space-y-3 mb-8">
+          <input 
+            type="email" 
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="Почта"
+            className="w-full bg-gray-50 border border-transparent focus:border-gray-200 focus:bg-white rounded-[20px] px-5 py-3.5 text-base outline-none transition-all placeholder:text-gray-400"
+          />
+          <input 
+            type="password" 
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Пароль"
+            className="w-full bg-gray-50 border border-transparent focus:border-gray-200 focus:bg-white rounded-[20px] px-5 py-3.5 text-base outline-none transition-all placeholder:text-gray-400"
+          />
         </div>
 
-        <div className="mt-auto pb-10">
-          <button 
-            onClick={() => onLogin(email, password)}
-            className="w-full bg-[#2E5BFF] text-white py-5 rounded-[24px] font-bold text-xl shadow-xl shadow-blue-100 active:scale-95 transition-all"
-          >
-            Вход
-          </button>
-          <p className="text-center mt-6 text-gray-400 font-medium">
-            Нет аккаунта? <span className="text-[#2E5BFF] font-bold">Создать</span>
-          </p>
-        </div>
+        <button 
+          onClick={() => onLogin(email, password)}
+          className="w-full bg-[#2E5BFF] text-white py-4 rounded-[20px] font-bold text-base shadow-lg shadow-blue-50 active:scale-[0.98] transition-all"
+        >
+          Войти
+        </button>
+        
+        <button className="mt-6 text-sm font-bold text-gray-300 hover:text-gray-400 transition-colors">
+          Создать аккаунт
+        </button>
       </div>
     </motion.div>
   );
@@ -491,7 +481,17 @@ const ChatDialogue = ({ messages, isLoading, isThinking }) => {
 };
 
 export default function App() {
-  const [currentScreen, setCurrentScreen] = useState('onboarding'); // 'onboarding', 'auth', 'main'
+  const [currentScreen, setCurrentScreen] = useState('auth'); // 'onboarding', 'auth', 'main'
+
+  useEffect(() => {
+    // Проверка, запущено ли приложение как PWA (standalone)
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+    
+    if (!isStandalone) {
+      setCurrentScreen('onboarding');
+    }
+  }, []);
+
   const [isStarted, setIsStarted] = useState(false);
   const [isWaveVisible, setIsWaveVisible] = useState(true);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
