@@ -172,7 +172,7 @@ const OnboardingScreen = ({ onNext }) => (
     initial={{ opacity: 0 }}
     animate={{ opacity: 1 }}
     exit={{ opacity: 0 }}
-    className="fixed inset-0 bg-[#FCFCFC] z-[200] flex flex-col items-center p-8 overflow-y-auto"
+    className="fixed inset-0 bg-white z-[200] flex flex-col items-center p-8 overflow-y-auto"
   >
     <div className="max-w-md w-full flex flex-col items-center pt-16">
       <div className="mb-16">
@@ -273,7 +273,16 @@ const HistoryScreen = ({ isOpen, onClose, history = [], onOpenModal }) => {
     <motion.div 
       initial={false}
       animate={{ x: 0 }}
-      className="fixed inset-0 bg-white z-0 flex flex-col w-full h-full overflow-hidden"
+      drag="x"
+      dragDirectionLock
+      dragConstraints={{ left: -1000, right: 0 }}
+      dragElastic={0.05}
+      onDragEnd={(event, info) => {
+        if (info.offset.x < -50) {
+          onClose();
+        }
+      }}
+      className="fixed inset-0 bg-white z-0 flex flex-col w-full h-full overflow-hidden touch-none"
     >
       {/* Top Header */}
       <div className="flex items-center justify-between px-8 pt-12 pb-8">
@@ -310,7 +319,7 @@ const HistoryScreen = ({ isOpen, onClose, history = [], onOpenModal }) => {
       <div className="flex-1 px-8 overflow-y-auto">
         <h2 className="text-[17px] font-bold text-[#1a1a1a] mb-6">Недавнее</h2>
         
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-3">
           {history.length > 0 ? (
             history.map((session, i) => (
               <motion.div 
@@ -318,13 +327,13 @@ const HistoryScreen = ({ isOpen, onClose, history = [], onOpenModal }) => {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.1 }}
-                className="bg-[#F8F9FA] p-6 rounded-[32px] flex flex-col gap-1 active:scale-[0.98] transition-transform cursor-pointer shadow-sm border border-gray-50"
+                className="bg-[#F8F9FA] p-4 rounded-[24px] flex flex-col gap-0.5 active:scale-[0.98] transition-transform cursor-pointer shadow-sm border border-gray-50"
               >
-                <span className="text-gray-400 text-[15px] font-medium">Сессия</span>
-                <h3 className="text-[17px] font-bold text-[#1a1a1a] leading-tight">
+                <span className="text-gray-400 text-[12px] font-medium">Сессия</span>
+                <h3 className="text-[15px] font-bold text-[#1a1a1a] leading-tight">
                   {session.title}
                 </h3>
-                <span className="text-gray-400 text-[13px] font-medium mt-1">
+                <span className="text-gray-400 text-[11px] font-medium mt-0.5">
                   {session.date}
                 </span>
               </motion.div>
@@ -772,7 +781,7 @@ export default function App() {
   };
 
   return (
-    <div className="h-screen bg-[#F0F0F0] flex flex-col items-center font-sans overflow-hidden fixed inset-0">
+    <div className="h-screen bg-white flex flex-col items-center font-sans overflow-hidden fixed inset-0">
       <AnimatePresence mode="wait">
         {currentScreen === 'onboarding' && (
           <OnboardingScreen key="onboarding" onNext={() => setCurrentScreen('auth')} />
@@ -791,7 +800,7 @@ export default function App() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="w-full h-full flex flex-col items-center"
+            className="w-full h-full flex flex-col items-center bg-white"
           >
             <div className={cn("fixed inset-0 z-0", isHistoryOpen ? "pointer-events-auto" : "pointer-events-none")}>
               <HistoryScreen 
@@ -835,11 +844,11 @@ export default function App() {
                 ease: "easeInOut", 
                 duration: 0.3 
               }}
-              className="h-full w-full bg-[#FCFCFC] flex flex-col items-center relative z-10 overflow-hidden shadow-2xl touch-none"
+              className="h-full w-full bg-white flex flex-col items-center relative z-10 overflow-hidden shadow-2xl touch-none"
             >
               <Header onOpenHistory={() => setIsHistoryOpen(true)} />
               
-              <main className="flex-1 w-full max-w-md flex flex-col items-center relative overflow-hidden h-full">
+              <main className="flex-1 w-full max-w-md flex flex-col items-center relative overflow-hidden h-full bg-white">
                 <AnimatePresence mode="wait">
                   {!isStarted ? (
                     <motion.div 
@@ -879,7 +888,7 @@ export default function App() {
                               initial={{ opacity: 0 }}
                               animate={{ opacity: 1 }}
                               exit={{ opacity: 0 }}
-                              className="absolute inset-x-0 -bottom-24 h-[450px] bg-gradient-to-t from-[#FCFCFC] via-[#FCFCFC] to-transparent pointer-events-none" 
+                              className="absolute inset-x-0 -bottom-24 h-[450px] bg-gradient-to-t from-white via-white to-transparent pointer-events-none" 
                             />
                           )}
                         </AnimatePresence>
