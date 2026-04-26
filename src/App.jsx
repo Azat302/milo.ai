@@ -92,12 +92,12 @@ const Header = ({ onOpenHistory }) => (
   <div className="flex items-center justify-between px-6 pt-4 pb-2 w-full max-w-md mx-auto">
     <button 
       onClick={onOpenHistory}
-      className="w-10 h-10 rounded-full bg-white shadow-milo flex items-center justify-center border border-gray-50 active:scale-90 transition-transform"
+      className="w-10 h-10 rounded-full bg-white flex items-center justify-center border border-gray-100 active:scale-90 transition-transform"
     >
       <Menu size={20} className="text-gray-700" />
     </button>
-    <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-full shadow-milo border border-gray-50">
-      <div className="w-7 h-5 overflow-hidden rounded-[4px] relative shadow-sm border border-gray-100 bg-white">
+    <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-full border border-gray-100">
+      <div className="w-7 h-5 overflow-hidden rounded-[4px] relative border border-gray-100 bg-white">
         {/* Stripes */}
         <div className="flex flex-col h-full w-full">
           {[...Array(7)].map((_, i) => (
@@ -116,7 +116,7 @@ const Header = ({ onOpenHistory }) => (
       <span className="text-sm font-semibold text-[#1a1a1a]">Уровень 1</span>
       <ChevronDown size={16} className="text-gray-400" />
     </div>
-    <div className="w-10 h-10 rounded-full bg-white shadow-milo flex items-center justify-center border border-gray-50">
+    <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center border border-gray-100">
       <User size={20} className="text-gray-700" />
     </div>
   </div>
@@ -575,12 +575,14 @@ export default function App() {
     }
   };
 
-  // Озвучка самого первого сообщения при старте
+  // Озвучка самого первого сообщения при старте удалена по запросу пользователя
+  /* 
   useEffect(() => {
     if (isStarted && !isHistoryOpen && messages.length === 1) {
-      playWelcomeSpeech();
+      // playWelcomeSpeech();
     }
   }, [isStarted, isHistoryOpen]);
+  */
 
   // Функция для "разблокировки" аудио (priming) при взаимодействии пользователя
   const primeAudio = () => {
@@ -730,6 +732,10 @@ export default function App() {
     }
   };
 
+  const handleOpenHistory = () => {
+    setIsHistoryOpen(true);
+  };
+
   const handleRecordStart = async () => {
     // Важно: вызываем primeAudio сразу при нажатии, 
     // чтобы "закрепить" за этим объектом разрешение на воспроизведение
@@ -807,7 +813,6 @@ export default function App() {
                 isOpen={isHistoryOpen} 
                 onClose={() => {
                   setIsHistoryOpen(false);
-                  playWelcomeSpeech();
                 }}
                 history={history}
                 onOpenModal={(type) => setActiveModal(type)}
@@ -846,7 +851,7 @@ export default function App() {
               }}
               className="h-full w-full bg-white flex flex-col items-center relative z-10 overflow-hidden shadow-2xl touch-none"
             >
-              <Header onOpenHistory={() => setIsHistoryOpen(true)} />
+              <Header onOpenHistory={handleOpenHistory} />
               
               <main className="flex-1 w-full max-w-md flex flex-col items-center relative overflow-hidden h-full bg-white">
                 <AnimatePresence mode="wait">
