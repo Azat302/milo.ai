@@ -88,7 +88,7 @@ const RecordingCircle = ({ isRecording }) => {
   );
 };
 
-const Header = ({ onOpenHistory }) => (
+const Header = ({ onOpenHistory, onIncompleteClick }) => (
   <div className="flex items-center justify-between px-6 pt-4 pb-2 w-full max-w-md mx-auto">
     <button 
       onClick={onOpenHistory}
@@ -96,7 +96,10 @@ const Header = ({ onOpenHistory }) => (
     >
       <Menu size={20} className="text-gray-700" />
     </button>
-    <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-full border border-gray-100">
+    <div 
+      onClick={onIncompleteClick}
+      className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-full border border-gray-100 cursor-pointer active:scale-95 transition-transform"
+    >
       <div className="w-7 h-5 overflow-hidden rounded-[4px] relative border border-gray-100 bg-white">
         {/* Stripes */}
         <div className="flex flex-col h-full w-full">
@@ -116,7 +119,10 @@ const Header = ({ onOpenHistory }) => (
       <span className="text-sm font-semibold text-[#1a1a1a]">Уровень 1</span>
       <ChevronDown size={16} className="text-gray-400" />
     </div>
-    <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center border border-gray-100">
+    <div 
+      onClick={onIncompleteClick}
+      className="w-10 h-10 rounded-full bg-white flex items-center justify-center border border-gray-100 cursor-pointer active:scale-90 transition-transform"
+    >
       <User size={20} className="text-gray-700" />
     </div>
   </div>
@@ -268,7 +274,7 @@ const AuthScreen = ({ onLogin }) => {
   );
 };
 
-const HistoryScreen = ({ isOpen, onClose, history = [], onOpenModal }) => {
+const HistoryScreen = ({ isOpen, onClose, history = [], onOpenModal, onIncompleteClick }) => {
   return (
     <motion.div 
       onPanEnd={(event, info) => {
@@ -297,6 +303,8 @@ const HistoryScreen = ({ isOpen, onClose, history = [], onOpenModal }) => {
                 onOpenModal('support');
               } else if (item.id === 'ideas') {
                 onOpenModal('ideas');
+              } else if (item.id === 'settings') {
+                onIncompleteClick();
               }
             }}
             className="flex items-center gap-4 active:opacity-60 transition-opacity"
@@ -507,8 +515,19 @@ export default function App() {
   const [isThinking, setIsThinking] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [activeModal, setActiveModal] = useState(null); // 'support', 'ideas', or null
+  const [showIncomplete, setShowIncomplete] = useState(false);
   
-  const mediaRecorderRef = useRef(null);
+  // Эффект для автоматического скрытия уведомления "не доделали"
+  useEffect(() => {
+    if (showIncomplete) {
+      const timer = setTimeout(() => setShowIncomplete(false), 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [showIncomplete]);
+
+  const handleIncompleteClick = () => {
+    setShowIncomplete(true);
+  };
   const audioChunksRef = useRef([]);
   const isCancellingRef = useRef(false);
   const audioRef = useRef(new Audio());
@@ -803,6 +822,7 @@ export default function App() {
               }}
               history={history}
               onOpenModal={(type) => setActiveModal(type)}
+              onIncompleteClick={handleIncompleteClick}
             />
 
             <Modal 
@@ -821,6 +841,23 @@ export default function App() {
               icon={<Lightbulb size={32} className="text-amber-600" />}
             />
 
+            <AnimatePresence>
+              {showIncomplete && (
+                <motion.div
+                  initial={{ opacity: 0, y: -20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  className="fixed top-24 left-1/2 -translate-x-1/2 z-[200] pointer-events-none"
+                >
+                  <div className="bg-white border border-red-500/30 px-3 py-1 rounded-full shadow-sm">
+                    <span className="text-[11px] font-bold text-red-500 uppercase tracking-wider block">
+                      не доделали :)
+                    </span>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
             <motion.div 
               drag="x"
               dragDirectionLock
@@ -837,7 +874,7 @@ export default function App() {
               }}
               className="h-full w-full bg-white flex flex-col items-center relative z-10 overflow-hidden shadow-2xl touch-none"
             >
-              <Header onOpenHistory={handleOpenHistory} />
+              <Header onOpenHistory={handleOpenHistory} onIncompleteClick={handleIncompleteClick} />
               
               <main className="flex-1 w-full max-w-md flex flex-col items-center relative overflow-hidden h-full bg-white">
                 <AnimatePresence mode="wait">
