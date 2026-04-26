@@ -271,8 +271,9 @@ const AuthScreen = ({ onLogin }) => {
 const HistoryScreen = ({ isOpen, onClose, history = [], onOpenModal }) => {
   return (
     <motion.div 
-      initial={false}
-      animate={{ x: 0 }}
+      initial={{ x: "-100%" }}
+      animate={{ x: isOpen ? "0%" : "-100%" }}
+      transition={{ type: "tween", ease: "easeInOut", duration: 0.3 }}
       drag="x"
       dragDirectionLock
       dragConstraints={{ left: -1000, right: 0 }}
@@ -282,11 +283,17 @@ const HistoryScreen = ({ isOpen, onClose, history = [], onOpenModal }) => {
           onClose();
         }
       }}
-      className="fixed inset-0 bg-white z-0 flex flex-col w-full h-full overflow-hidden touch-none"
+      className="fixed inset-0 bg-white z-[150] flex flex-col w-full h-full overflow-hidden shadow-2xl touch-none"
     >
       {/* Top Header */}
       <div className="flex items-center justify-between px-8 pt-12 pb-8">
         <h1 className="text-3xl font-bold tracking-tight text-[#1a1a1a]">milo</h1>
+        <button 
+          onClick={onClose}
+          className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 active:scale-90 transition-transform"
+        >
+          <X size={20} />
+        </button>
       </div>
 
       {/* Menu List */}
@@ -801,23 +808,15 @@ export default function App() {
         )}
 
         {currentScreen === 'main' && (
-          <motion.div 
-            key="main"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="w-full h-full flex flex-col items-center bg-white"
-          >
-            <div className={cn("fixed inset-0 z-0", isHistoryOpen ? "pointer-events-auto" : "pointer-events-none")}>
-              <HistoryScreen 
-                isOpen={isHistoryOpen} 
-                onClose={() => {
-                  setIsHistoryOpen(false);
-                }}
-                history={history}
-                onOpenModal={(type) => setActiveModal(type)}
-              />
-            </div>
+          <div className="w-full h-full flex flex-col items-center bg-white relative">
+            <HistoryScreen 
+              isOpen={isHistoryOpen} 
+              onClose={() => {
+                setIsHistoryOpen(false);
+              }}
+              history={history}
+              onOpenModal={(type) => setActiveModal(type)}
+            />
 
             <Modal 
               isOpen={activeModal === 'support'} 
@@ -836,20 +835,12 @@ export default function App() {
             />
 
             <motion.div 
-              drag="x"
-              dragDirectionLock
-              dragConstraints={{ left: 0, right: 1000 }}
-              dragElastic={0.05}
-              onDragEnd={onDragEnd}
-              animate={{ 
-                x: isHistoryOpen ? "100%" : "0%",
+              onPanEnd={(event, info) => {
+                if (info.offset.x > 50 && !isHistoryOpen) {
+                  setIsHistoryOpen(true);
+                }
               }}
-              transition={{ 
-                type: "tween", 
-                ease: "easeInOut", 
-                duration: 0.3 
-              }}
-              className="h-full w-full bg-white flex flex-col items-center relative z-10 overflow-hidden shadow-2xl touch-none"
+              className="h-full w-full bg-white flex flex-col items-center relative z-10 overflow-hidden"
             >
               <Header onOpenHistory={handleOpenHistory} />
               
@@ -984,12 +975,11 @@ export default function App() {
                   className="absolute inset-0 z-[60] cursor-pointer bg-black/5" 
                   onClick={() => {
                     setIsHistoryOpen(false);
-                    playWelcomeSpeech();
                   }}
                 />
               )}
             </motion.div>
-          </motion.div>
+          </div>
         )}
       </AnimatePresence>
     </div>
