@@ -270,7 +270,14 @@ const AuthScreen = ({ onLogin }) => {
 
 const HistoryScreen = ({ isOpen, onClose, history = [], onOpenModal }) => {
   return (
-    <div className="fixed inset-0 bg-white z-0 flex flex-col w-full h-full overflow-hidden">
+    <motion.div 
+      onPanEnd={(event, info) => {
+        if (info.offset.x < -50) {
+          onClose();
+        }
+      }}
+      className="fixed inset-0 bg-white z-0 flex flex-col w-full h-full overflow-hidden"
+    >
       {/* Top Header */}
       <div className="flex items-center justify-between px-8 pt-12 pb-8">
         <h1 className="text-3xl font-bold tracking-tight text-[#1a1a1a]">milo</h1>
@@ -349,7 +356,7 @@ const HistoryScreen = ({ isOpen, onClose, history = [], onOpenModal }) => {
           <span className="text-[17px] font-bold">Начать</span>
         </button>
       </div>
-    </div>
+    </motion.div>
   );
 };
 
@@ -821,7 +828,7 @@ export default function App() {
               dragElastic={0.05}
               onDragEnd={onDragEnd}
               animate={{ 
-                x: isHistoryOpen ? "85%" : "0%",
+                x: isHistoryOpen ? "100%" : "0%",
               }}
               transition={{ 
                 type: "tween", 
