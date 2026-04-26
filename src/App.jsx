@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { User, ChevronDown, Mic, X, Activity, Settings, Book, LineChart, Flame, ChevronRight, Menu, MessageSquare, Send, Lock, Trash2, LockKeyholeOpen, ChevronUp } from 'lucide-react';
+import { User, ChevronDown, Mic, X, Activity, Settings, Book, LineChart, Flame, ChevronRight, Menu, MessageSquare, Send, Lock, Trash2, LockKeyholeOpen, ChevronUp, HelpCircle, Lightbulb, Smile, ExternalLink } from 'lucide-react';
 import { motion, AnimatePresence, useMotionValue } from 'framer-motion';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -122,75 +122,226 @@ const Header = ({ onOpenHistory }) => (
   </div>
 );
 
-const HistoryScreen = ({ isOpen, onClose, history = [] }) => {
+const Modal = ({ isOpen, onClose, title, message, icon }) => (
+  <AnimatePresence>
+    {isOpen && (
+      <>
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onClick={onClose}
+          className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[100]"
+        />
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.9, y: 20 }}
+          className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-sm bg-white rounded-[32px] p-8 shadow-2xl z-[101] flex flex-col items-center text-center"
+        >
+          <div className="w-16 h-16 rounded-2xl bg-gray-50 flex items-center justify-center mb-6">
+            {icon}
+          </div>
+          <h3 className="text-xl font-extrabold text-[#1a1a1a] mb-3">{title}</h3>
+          <p className="text-gray-500 leading-relaxed mb-8">
+            {message}
+          </p>
+          <a 
+            href="https://t.me/milobot_username" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="w-full bg-[#2E5BFF] text-white py-4 rounded-2xl font-bold flex items-center justify-center gap-2 active:scale-95 transition-all"
+          >
+            Написать в Telegram
+            <ExternalLink size={18} />
+          </a>
+          <button 
+            onClick={onClose}
+            className="mt-4 text-gray-400 font-bold py-2 active:opacity-60 transition-opacity"
+          >
+            Закрыть
+          </button>
+        </motion.div>
+      </>
+    )}
+  </AnimatePresence>
+);
+
+const OnboardingScreen = ({ onNext }) => (
+  <motion.div 
+    initial={{ opacity: 0 }}
+    animate={{ opacity: 1 }}
+    exit={{ opacity: 0 }}
+    className="fixed inset-0 bg-[#FCFCFC] z-[200] flex flex-col items-center p-8 overflow-y-auto"
+  >
+    <div className="max-w-md w-full flex flex-col items-center pt-12">
+      <div className="w-full aspect-[4/3] bg-gray-50 rounded-[40px] mb-12 relative overflow-hidden border border-gray-100 shadow-sm flex items-center justify-center">
+        <div className="relative z-10 flex flex-col items-center">
+          <div className="w-24 h-24 bg-white rounded-[32px] mb-6 shadow-milo flex items-center justify-center border border-gray-50">
+            <img src="/milologo.png" alt="Milo" className="w-14 h-14" />
+          </div>
+          <div className="bg-white px-4 py-2 rounded-full border border-gray-100 text-sm font-bold text-[#2E5BFF] shadow-sm">
+            web.milo.ai
+          </div>
+        </div>
+      </div>
+
+      <h1 className="text-3xl font-extrabold mb-8 text-[#1a1a1a] text-center leading-tight">
+        Установите <br/> веб-приложение
+      </h1>
+
+      <div className="space-y-8 mb-12 w-full px-2">
+        <div className="flex gap-5 items-start">
+          <div className="w-10 h-10 rounded-2xl bg-blue-50 text-[#2E5BFF] flex items-center justify-center flex-shrink-0 font-extrabold text-lg">1</div>
+          <p className="text-[17px] font-medium text-gray-600 leading-snug">
+            Нажмите на <span className="font-bold text-[#1a1a1a]">...</span>, а потом на иконку <ExternalLink size={20} className="inline mx-1 text-[#2E5BFF]" /> <span className="font-bold text-[#1a1a1a]">Поделиться</span>.
+          </p>
+        </div>
+        <div className="flex gap-5 items-start">
+          <div className="w-10 h-10 rounded-2xl bg-blue-50 text-[#2E5BFF] flex items-center justify-center flex-shrink-0 font-extrabold text-lg">2</div>
+          <p className="text-[17px] font-medium text-gray-600 leading-snug">
+            В выпадающем меню найдите <br/>
+            <span className="font-bold text-[#1a1a1a]">На экран Домой → Добавить</span>.
+          </p>
+        </div>
+        <div className="flex gap-5 items-start">
+          <div className="w-10 h-10 rounded-2xl bg-blue-50 text-[#2E5BFF] flex items-center justify-center flex-shrink-0 font-extrabold text-lg">3</div>
+          <p className="text-[17px] font-medium text-gray-500 leading-snug">
+            Настройте веб-приложение по инструкции. Оно всегда будет актуально.
+          </p>
+        </div>
+      </div>
+
+      <button 
+        onClick={onNext}
+        className="w-full bg-[#2E5BFF] text-white py-5 rounded-[28px] font-bold text-xl shadow-xl shadow-blue-100 active:scale-95 transition-all mb-4"
+      >
+        Пропустить
+      </button>
+    </div>
+  </motion.div>
+);
+
+const AuthScreen = ({ onLogin }) => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+
   return (
     <motion.div 
-      drag="x"
-      dragConstraints={{ left: 0, right: 0 }}
-      dragElastic={{ left: 0.1, right: 0 }}
-      onDragEnd={(e, info) => {
-        if (info.offset.x < -50) onClose();
-      }}
-      className="fixed inset-0 bg-[#FCFCFC] z-0 flex flex-col w-full h-full overflow-hidden touch-none"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+      className="fixed inset-0 bg-white z-[200] flex flex-col p-8 pt-20"
     >
-      <div className="flex items-center justify-between px-8 pt-10 pb-4 w-full max-w-md">
-        <h1 className="text-3xl font-bold text-[#1a1a1a]">milo</h1>
-        <button className="p-1.5">
-          <Settings size={20} className="text-gray-900" />
-        </button>
+      <div className="max-w-md w-full mx-auto flex flex-col h-full">
+        <div className="mb-12">
+          <h1 className="text-4xl font-extrabold text-[#1a1a1a] mb-4">Вход</h1>
+          <p className="text-gray-500 text-lg">Введите свои данные, чтобы продолжить обучение</p>
+        </div>
+
+        <div className="space-y-4 mb-8">
+          <div className="space-y-2">
+            <label className="text-sm font-bold text-gray-400 uppercase tracking-wider ml-1">Почта</label>
+            <input 
+              type="email" 
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="example@mail.com"
+              className="w-full bg-gray-50 border-2 border-transparent focus:border-[#2E5BFF] focus:bg-white rounded-[24px] px-6 py-4 text-lg outline-none transition-all"
+            />
+          </div>
+          <div className="space-y-2">
+            <label className="text-sm font-bold text-gray-400 uppercase tracking-wider ml-1">Пароль</label>
+            <input 
+              type="password" 
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
+              className="w-full bg-gray-50 border-2 border-transparent focus:border-[#2E5BFF] focus:bg-white rounded-[24px] px-6 py-4 text-lg outline-none transition-all"
+            />
+          </div>
+        </div>
+
+        <div className="mt-auto pb-10">
+          <button 
+            onClick={() => onLogin(email, password)}
+            className="w-full bg-[#2E5BFF] text-white py-5 rounded-[24px] font-bold text-xl shadow-xl shadow-blue-100 active:scale-95 transition-all"
+          >
+            Вход
+          </button>
+          <p className="text-center mt-6 text-gray-400 font-medium">
+            Нет аккаунта? <span className="text-[#2E5BFF] font-bold">Создать</span>
+          </p>
+        </div>
+      </div>
+    </motion.div>
+  );
+};
+
+const HistoryScreen = ({ isOpen, onClose, history = [], onOpenModal }) => {
+  return (
+    <motion.div 
+      initial={false}
+      animate={{ x: 0 }}
+      className="fixed inset-0 bg-white z-0 flex flex-col w-full h-full overflow-hidden"
+    >
+      {/* Top Header */}
+      <div className="flex items-center justify-between px-8 pt-12 pb-8">
+        <h1 className="text-3xl font-bold tracking-tight text-[#1a1a1a]">milo</h1>
       </div>
 
-      <div className="flex flex-col gap-2 px-6 mt-4 w-full max-w-md">
-        <button className="flex items-center justify-between bg-white h-[36px] px-4 rounded-[12px] shadow-milo border border-gray-50 active:scale-[0.98] transition-transform">
-          <div className="flex items-center gap-3">
-            <div className="w-6 h-6 flex items-center justify-center">
-              <Book size={18} className="text-gray-900" />
+      {/* Menu List */}
+      <div className="flex flex-col px-8 gap-6 mb-12">
+        {[
+          { id: 'settings', icon: <Settings size={22} />, label: "Настройки" },
+          { id: 'support', icon: <Smile size={22} />, label: "Поддержка" },
+          { id: 'ideas', icon: <Lightbulb size={22} />, label: "Идеи" },
+        ].map((item, i) => (
+          <button 
+            key={i}
+            onClick={() => {
+              if (item.id === 'support') {
+                onOpenModal('support');
+              } else if (item.id === 'ideas') {
+                onOpenModal('ideas');
+              }
+            }}
+            className="flex items-center gap-4 active:opacity-60 transition-opacity"
+          >
+            <div className="text-[#1a1a1a]">
+              {item.icon}
             </div>
-            <span className="text-[15px] font-semibold text-gray-900">Словарь</span>
-          </div>
-          <ChevronRight size={16} className="text-gray-900 opacity-40" />
-        </button>
-
-        <button className="flex items-center justify-between bg-white h-[36px] px-4 rounded-[12px] shadow-milo border border-gray-50 active:scale-[0.98] transition-transform">
-          <div className="flex items-center gap-3">
-            <div className="w-6 h-6 flex items-center justify-center">
-              <LineChart size={18} className="text-gray-900" />
-            </div>
-            <span className="text-[15px] font-semibold text-gray-900">Прогресс</span>
-          </div>
-          <ChevronRight size={16} className="text-gray-900 opacity-40" />
-        </button>
-
-        <button className="flex items-center justify-between bg-white h-[36px] px-4 rounded-[12px] shadow-milo border border-gray-50 active:scale-[0.98] transition-transform">
-          <div className="flex items-center gap-3">
-            <div className="w-6 h-6 flex items-center justify-center">
-              <Flame size={18} className="text-gray-900" />
-            </div>
-            <span className="text-[15px] font-semibold text-gray-900">Серия</span>
-          </div>
-          <ChevronRight size={16} className="text-gray-900 opacity-40" />
-        </button>
+            <span className="text-[17px] font-medium text-[#1a1a1a]">{item.label}</span>
+          </button>
+        ))}
       </div>
 
-      <div className="mt-8 px-8 w-full max-w-md">
-        <h2 className="text-2xl font-bold text-[#1a1a1a]">История</h2>
+      {/* Recent Section */}
+      <div className="flex-1 px-8 overflow-y-auto">
+        <h2 className="text-[17px] font-bold text-[#1a1a1a] mb-6">Недавнее</h2>
         
-        <div className="mt-4 flex flex-col gap-3">
+        <div className="flex flex-col gap-4">
           {history.length > 0 ? (
             history.map((session, i) => (
-              <div key={i} className="bg-[#F5F5F5] p-4 rounded-[20px] flex flex-col gap-0.5">
-                <span className="text-gray-500 text-[13px] font-medium leading-tight">Сессия</span>
-                <h3 className="text-[16px] font-bold text-[#1a1a1a] leading-tight">
+              <motion.div 
+                key={i} 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.1 }}
+                className="bg-[#F8F9FA] p-6 rounded-[32px] flex flex-col gap-1 active:scale-[0.98] transition-transform cursor-pointer shadow-sm border border-gray-50"
+              >
+                <span className="text-gray-400 text-[15px] font-medium">Сессия</span>
+                <h3 className="text-[17px] font-bold text-[#1a1a1a] leading-tight">
                   {session.title}
                 </h3>
-                <span className="text-gray-400 text-[11px] mt-0.5">
+                <span className="text-gray-400 text-[13px] font-medium mt-1">
                   {session.date}
                 </span>
-              </div>
+              </motion.div>
             ))
           ) : (
             <div className="flex flex-col items-center justify-center py-20 text-center">
-              <p className="text-gray-900 font-medium text-lg">
+              <p className="text-[#1a1a1a] text-[17px] font-medium">
                 Упс, вы еще не начали учиться
               </p>
             </div>
@@ -198,17 +349,18 @@ const HistoryScreen = ({ isOpen, onClose, history = [] }) => {
         </div>
       </div>
 
-      <div className="mt-auto pb-12 px-6 flex justify-end w-full max-w-md mx-auto">
+      {/* Floating Action Button - Bottom Right */}
+      <div className="absolute bottom-10 right-8">
         <button 
           onClick={onClose}
-          className="bg-[#2E5BFF] text-white h-[40px] px-7 rounded-[20px] shadow-milo flex items-center gap-2.5 active:scale-95 transition-transform"
+          className="bg-[#2E5BFF] text-white h-[56px] px-6 rounded-[28px] shadow-xl shadow-blue-200 flex items-center gap-3 active:scale-95 transition-all"
         >
           <div className="flex items-center gap-[2px]">
-            <div className="w-[2.5px] h-3 bg-white rounded-full"></div>
-            <div className="w-[2.5px] h-5 bg-white rounded-full"></div>
-            <div className="w-[2.5px] h-3 bg-white rounded-full"></div>
+            <div className="w-[3px] h-3 bg-white/40 rounded-full" />
+            <div className="w-[3px] h-5 bg-white rounded-full" />
+            <div className="w-[3px] h-4 bg-white/60 rounded-full" />
           </div>
-          <span className="text-[17px] font-bold">Чат</span>
+          <span className="text-[17px] font-bold">Начать</span>
         </button>
       </div>
     </motion.div>
@@ -339,6 +491,7 @@ const ChatDialogue = ({ messages, isLoading, isThinking }) => {
 };
 
 export default function App() {
+  const [currentScreen, setCurrentScreen] = useState('onboarding'); // 'onboarding', 'auth', 'main'
   const [isStarted, setIsStarted] = useState(false);
   const [isWaveVisible, setIsWaveVisible] = useState(true);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
@@ -350,6 +503,7 @@ export default function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [isThinking, setIsThinking] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [activeModal, setActiveModal] = useState(null); // 'support', 'ideas', or null
   
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
@@ -619,171 +773,211 @@ export default function App() {
 
   return (
     <div className="h-screen bg-[#F0F0F0] flex flex-col items-center font-sans overflow-hidden fixed inset-0">
-      <div className={cn("fixed inset-0 z-0", isHistoryOpen ? "pointer-events-auto" : "pointer-events-none")}>
-        <HistoryScreen 
-          isOpen={isHistoryOpen} 
-          onClose={() => {
-            setIsHistoryOpen(false);
-            playWelcomeSpeech();
-          }}
-          history={history}
-        />
-      </div>
-
-      <motion.div 
-        drag="x"
-        dragDirectionLock
-        dragConstraints={{ left: 0, right: 1000 }}
-        dragElastic={0.05}
-        onDragEnd={onDragEnd}
-        animate={{ 
-          x: isHistoryOpen ? "100%" : "0%",
-        }}
-        transition={{ 
-          type: "tween", 
-          ease: "easeInOut", 
-          duration: 0.3 
-        }}
-        className="h-full w-full bg-[#FCFCFC] flex flex-col items-center relative z-10 overflow-hidden shadow-2xl touch-none"
-      >
-        <Header onOpenHistory={() => setIsHistoryOpen(true)} />
+      <AnimatePresence mode="wait">
+        {currentScreen === 'onboarding' && (
+          <OnboardingScreen key="onboarding" onNext={() => setCurrentScreen('auth')} />
+        )}
         
-        <main className="flex-1 w-full max-w-md flex flex-col items-center relative overflow-hidden h-full">
-          <AnimatePresence mode="wait">
-            {!isStarted ? (
-              <motion.div 
-                key="welcome"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="flex flex-col items-center justify-center h-full gap-12 pb-24"
-              >
-                <h1 className="text-2xl font-bold text-center px-10">
-                  Первый разговор в аэропорту
-                </h1>
-                
-                <WaveBars isVisible={true} isAnimating={isPlaying} />
-                
-                <button 
-                  onClick={handleStartChat}
-                  className="bg-[#2E5BFF] text-white px-10 py-4 rounded-full text-lg font-semibold shadow-lg shadow-[#2E5BFF44] active:scale-95 transition-transform"
-                >
-                  Начать
-                </button>
-              </motion.div>
-            ) : (
-              <motion.div 
-                key="chat"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="w-full h-full flex flex-col overflow-hidden"
-              >
-                <ChatDialogue messages={messages} isLoading={isLoading} isThinking={isThinking} />
-                
-                {/* FIXED WAVE PANEL - Out of scroll flow */}
-                <div className="fixed bottom-24 left-0 right-0 z-20 pointer-events-none flex flex-col items-center max-w-md mx-auto h-64 justify-center">
-                  <AnimatePresence>
-                    {(isWaveVisible || isRecording) && (
-                      <motion.div 
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="absolute inset-x-0 -bottom-24 h-[450px] bg-gradient-to-t from-[#FCFCFC] via-[#FCFCFC] to-transparent pointer-events-none" 
-                      />
-                    )}
-                  </AnimatePresence>
-                  <div 
-                      onPointerDown={handleRecordStart}
-                      onPointerUp={handleRecordEnd}
-                      onPointerLeave={handleRecordEnd}
-                      className="pointer-events-auto cursor-pointer relative flex items-center justify-center w-full z-10 touch-none"
-                    >
-                      <div className="absolute">
-                        <WaveBars isVisible={isWaveVisible} isAnimating={isPlaying} />
-                      </div>
-                      <div className="absolute">
-                        <RecordingCircle isRecording={isRecording} />
-                      </div>
-                    </div>
-                  {(isWaveVisible || isRecording) && (
-                    <motion.p 
+        {currentScreen === 'auth' && (
+          <AuthScreen key="auth" onLogin={(email, password) => {
+            console.log("Logged in with:", email);
+            setCurrentScreen('main');
+          }} />
+        )}
+
+        {currentScreen === 'main' && (
+          <motion.div 
+            key="main"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="w-full h-full flex flex-col items-center"
+          >
+            <div className={cn("fixed inset-0 z-0", isHistoryOpen ? "pointer-events-auto" : "pointer-events-none")}>
+              <HistoryScreen 
+                isOpen={isHistoryOpen} 
+                onClose={() => {
+                  setIsHistoryOpen(false);
+                  playWelcomeSpeech();
+                }}
+                history={history}
+                onOpenModal={(type) => setActiveModal(type)}
+              />
+            </div>
+
+            <Modal 
+              isOpen={activeModal === 'support'} 
+              onClose={() => setActiveModal(null)}
+              title="Поддержка"
+              message="Здравствуйте! Спасибо, что пользуетесь нашим приложением. Если вам нужна помощь или возникла ошибка, о которой нам следует знать, пожалуйста, напишите нам через ТГ бота."
+              icon={<Smile size={32} className="text-purple-600" />}
+            />
+
+            <Modal 
+              isOpen={activeModal === 'ideas'} 
+              onClose={() => setActiveModal(null)}
+              title="Идеи и предложения"
+              message="Мы всегда рады новым идеям! Если у вас есть предложения по улучшению milo или вы хотите увидеть новые функции, пожалуйста, поделитесь ими с нами через ТГ бота."
+              icon={<Lightbulb size={32} className="text-amber-600" />}
+            />
+
+            <motion.div 
+              drag="x"
+              dragDirectionLock
+              dragConstraints={{ left: 0, right: 1000 }}
+              dragElastic={0.05}
+              onDragEnd={onDragEnd}
+              animate={{ 
+                x: isHistoryOpen ? "100%" : "0%",
+              }}
+              transition={{ 
+                type: "tween", 
+                ease: "easeInOut", 
+                duration: 0.3 
+              }}
+              className="h-full w-full bg-[#FCFCFC] flex flex-col items-center relative z-10 overflow-hidden shadow-2xl touch-none"
+            >
+              <Header onOpenHistory={() => setIsHistoryOpen(true)} />
+              
+              <main className="flex-1 w-full max-w-md flex flex-col items-center relative overflow-hidden h-full">
+                <AnimatePresence mode="wait">
+                  {!isStarted ? (
+                    <motion.div 
+                      key="welcome"
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
-                      className="text-gray-400 text-sm mt-24 text-center w-full z-10"
+                      exit={{ opacity: 0 }}
+                      className="flex flex-col items-center justify-center h-full gap-12 pb-24"
                     >
-                      {isRecording ? "Говорите..." : "Зажми чтобы говорить"}
-                    </motion.p>
+                      <h1 className="text-2xl font-bold text-center px-10">
+                        Первый разговор в аэропорту
+                      </h1>
+                      
+                      <WaveBars isVisible={true} isAnimating={isPlaying} />
+                      
+                      <button 
+                        onClick={handleStartChat}
+                        className="bg-[#2E5BFF] text-white px-10 py-4 rounded-full text-lg font-semibold shadow-lg shadow-[#2E5BFF44] active:scale-95 transition-transform"
+                      >
+                        Начать
+                      </button>
+                    </motion.div>
+                  ) : (
+                    <motion.div 
+                      key="chat"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      className="w-full h-full flex flex-col overflow-hidden"
+                    >
+                      <ChatDialogue messages={messages} isLoading={isLoading} isThinking={isThinking} />
+                      
+                      {/* FIXED WAVE PANEL - Out of scroll flow */}
+                      <div className="fixed bottom-24 left-0 right-0 z-20 pointer-events-none flex flex-col items-center max-w-md mx-auto h-64 justify-center">
+                        <AnimatePresence>
+                          {(isWaveVisible || isRecording) && (
+                            <motion.div 
+                              initial={{ opacity: 0 }}
+                              animate={{ opacity: 1 }}
+                              exit={{ opacity: 0 }}
+                              className="absolute inset-x-0 -bottom-24 h-[450px] bg-gradient-to-t from-[#FCFCFC] via-[#FCFCFC] to-transparent pointer-events-none" 
+                            />
+                          )}
+                        </AnimatePresence>
+                        <div 
+                            onPointerDown={handleRecordStart}
+                            onPointerUp={handleRecordEnd}
+                            onPointerLeave={handleRecordEnd}
+                            className="pointer-events-auto cursor-pointer relative flex items-center justify-center w-full z-10 touch-none"
+                          >
+                            <div className="absolute">
+                              <WaveBars isVisible={isWaveVisible} isAnimating={isPlaying} />
+                            </div>
+                            <div className="absolute">
+                              <RecordingCircle isRecording={isRecording} />
+                            </div>
+                          </div>
+                        {(isWaveVisible || isRecording) && (
+                          <motion.p 
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            className="text-gray-400 text-sm mt-24 text-center w-full z-10"
+                          >
+                            {isRecording ? "Говорите..." : "Зажми чтобы говорить"}
+                          </motion.p>
+                        )}
+                      </div>
+                    </motion.div>
                   )}
+                </AnimatePresence>
+              </main>
+
+              {/* Footer - ALWAYS FIXED */}
+              <div className="fixed bottom-8 w-full max-w-md px-4 flex items-center gap-3 z-30 pointer-events-none mx-auto left-0 right-0">
+                <div className="flex-1 bg-white h-14 rounded-full flex items-center px-6 shadow-milo border border-gray-50 pointer-events-auto">
+                  <input 
+                    type="text" 
+                    value={inputText}
+                    onChange={(e) => setInputText(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+                    placeholder="Спросить Milo..." 
+                    className="bg-transparent w-full outline-none text-gray-700 placeholder-gray-400"
+                  />
                 </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </main>
-
-        {/* Footer - ALWAYS FIXED */}
-        <div className="fixed bottom-8 w-full max-w-md px-4 flex items-center gap-3 z-30 pointer-events-none mx-auto left-0 right-0">
-          <div className="flex-1 bg-white h-14 rounded-full flex items-center px-6 shadow-milo border border-gray-50 pointer-events-auto">
-            <input 
-              type="text" 
-              value={inputText}
-              onChange={(e) => setInputText(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-              placeholder="Спросить Milo..." 
-              className="bg-transparent w-full outline-none text-gray-700 placeholder-gray-400"
-            />
-          </div>
-          
-          <button 
-            onClick={() => handleSendMessage()}
-            disabled={isLoading}
-            className="w-14 h-14 bg-white text-gray-700 rounded-full flex items-center justify-center shadow-milo active:scale-90 transition-all pointer-events-auto disabled:opacity-50"
-          >
-            <Send size={24} />
-          </button>
-          
-          <button 
-            onClick={() => {
-              // Разблокируем аудио при любом клике на кнопки управления
-              primeAudio();
-              
-              if (isWaveVisible || isRecording) {
-                if (isRecording) {
-                  isCancellingRef.current = true;
-                  if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
-                    mediaRecorderRef.current.stop();
-                  }
-                }
-                setIsWaveVisible(false);
-                setIsRecording(false);
-              } else {
-                setIsWaveVisible(true);
-              }
-            }}
-            className="w-14 h-14 bg-[#111] text-white rounded-full flex items-center justify-center shadow-milo active:scale-90 transition-transform pointer-events-auto"
-          >
-            {isWaveVisible || isRecording ? (
-              <X size={32} strokeWidth={2.5} />
-            ) : (
-              <div className="flex items-center gap-[3px]">
-                <div className="w-[4px] h-4 bg-white rounded-full"></div>
-                <div className="w-[4px] h-7 bg-white rounded-full"></div>
-                <div className="w-[4px] h-5 bg-white rounded-full"></div>
+                
+                <button 
+                  onClick={() => handleSendMessage()}
+                  disabled={isLoading}
+                  className="w-14 h-14 bg-white text-gray-700 rounded-full flex items-center justify-center shadow-milo active:scale-90 transition-all pointer-events-auto disabled:opacity-50"
+                >
+                  <Send size={24} />
+                </button>
+                
+                <button 
+                  onClick={() => {
+                    // Разблокируем аудио при любом клике на кнопки управления
+                    primeAudio();
+                    
+                    if (isWaveVisible || isRecording) {
+                      if (isRecording) {
+                        isCancellingRef.current = true;
+                        if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+                          mediaRecorderRef.current.stop();
+                        }
+                      }
+                      setIsWaveVisible(false);
+                      setIsRecording(false);
+                    } else {
+                      setIsWaveVisible(true);
+                    }
+                  }}
+                  className="w-14 h-14 bg-[#111] text-white rounded-full flex items-center justify-center shadow-milo active:scale-90 transition-transform pointer-events-auto"
+                >
+                  {isWaveVisible || isRecording ? (
+                    <X size={32} strokeWidth={2.5} />
+                  ) : (
+                    <div className="flex items-center gap-[3px]">
+                      <div className="w-[4px] h-4 bg-white rounded-full"></div>
+                      <div className="w-[4px] h-7 bg-white rounded-full"></div>
+                      <div className="w-[4px] h-5 bg-white rounded-full"></div>
+                    </div>
+                  )}
+                </button>
               </div>
-            )}
-          </button>
-        </div>
 
-        {/* Overlay to close history */}
-        {isHistoryOpen && (
-          <div 
-            className="absolute inset-0 z-[60] cursor-pointer bg-black/5" 
-            onClick={() => {
-              setIsHistoryOpen(false);
-              playWelcomeSpeech();
-            }}
-          />
+              {/* Overlay to close history */}
+              {isHistoryOpen && (
+                <div 
+                  className="absolute inset-0 z-[60] cursor-pointer bg-black/5" 
+                  onClick={() => {
+                    setIsHistoryOpen(false);
+                    playWelcomeSpeech();
+                  }}
+                />
+              )}
+            </motion.div>
+          </motion.div>
         )}
-      </motion.div>
+      </AnimatePresence>
     </div>
   );
 }
